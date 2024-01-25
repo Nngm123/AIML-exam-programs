@@ -1,0 +1,333 @@
+##### aster program ######
+
+import heapq
+
+# Define the graph of Romania with distances between places
+romania_map = {
+    'Arad': {'Zerind': 75, 'Timisoara': 118, 'Sibiu': 140},
+    'Zerind': {'Arad': 75, 'Oradea': 71},
+    'Timisoara': {'Arad': 118, 'Lugoj': 111},
+    'Sibiu': {'Arad': 140, 'Oradea': 151, 'Fagaras': 99, 'Rimnicu Vilcea': 80},
+    'Oradea': {'Zerind': 71, 'Sibiu': 151},
+    'Lugoj': {'Timisoara': 111, 'Mehadia': 70},
+    'Fagaras': {'Sibiu': 99, 'Bucharest': 211},
+    'Rimnicu Vilcea': {'Sibiu': 80, 'Pitesti': 97, 'Craiova': 146},
+    'Mehadia': {'Lugoj': 70, 'Drobeta': 75},
+    'Bucharest': {'Fagaras': 211, 'Pitesti': 101, 'Giurgiu': 90, 'Urziceni': 85},
+    'Pitesti': {'Rimnicu Vilcea': 97, 'Bucharest': 101, 'Craiova': 138},
+    'Craiova': {'Rimnicu Vilcea': 146, 'Pitesti': 138, 'Drobeta': 120},
+    'Drobeta': {'Mehadia': 75, 'Craiova': 120},
+    'Giurgiu': {'Bucharest': 90},
+    'Urziceni': {'Bucharest': 85, 'Hirsova': 98, 'Vaslui': 142},
+    'Hirsova': {'Urziceni': 98, 'Eforie': 86},
+    'Eforie': {'Hirsova': 86},
+    'Vaslui': {'Urziceni': 142, 'Iasi': 92},
+    'Iasi': {'Vaslui': 92, 'Neamt': 87},
+    'Neamt': {'Iasi': 87}
+}
+
+def astar(graph, start, goal):
+    open_list = [(0, start)]
+    came_from = {}
+    g_score = {place: float('inf') for place in graph}
+    g_score[start] = 0
+    f_score = {place: float('inf') for place in graph}
+    f_score[start] = 0
+
+    while open_list:
+        _, current = heapq.heappop(open_list)
+
+        if current == goal:
+            return reconstruct_path(came_from, current), g_score[goal]
+
+        for neighbor in graph[current]:
+            tentative_g_score = g_score[current] + graph[current][neighbor]
+
+            if tentative_g_score < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                f_score[neighbor] = tentative_g_score
+
+                heapq.heappush(open_list, (f_score[neighbor], neighbor))
+
+    return None, float('inf')  # No path found
+
+def reconstruct_path(came_from, current):
+    path = [current]
+    while current in came_from:
+        current = came_from[current]
+        path.insert(0, current)
+    return path
+
+# Take user input for starting and ending places
+start_place = input("Enter the starting place in Romania: ")
+goal_place = input("Enter the ending place in Romania: ")
+
+if start_place in romania_map and goal_place in romania_map:
+    shortest_path, shortest_distance = astar(romania_map, start_place, goal_place)
+    if shortest_path:
+        print(f"Shortest path from {start_place} to {goal_place}: {shortest_path}")
+        print(f"Shortest distance: {shortest_distance} units")
+    else:
+        print(f"No path found from {start_place} to {goal_place}");
+
+###### perceptron program ######
+
+import numpy as np
+
+def perceptron(X, y, learning_rate=0.1, max_iterations=1000):
+    """
+    Implements the Perceptron Learning algorithm.
+
+    Args:
+        X (numpy.ndarray): Input data matrix (samples x features).
+        y (numpy.ndarray): Target labels (0 or 1).
+        learning_rate (float): Learning rate.
+        max_iterations (int): Maximum number of iterations.
+
+    Returns:
+        tuple: (weights, threshold, iterations_taken)
+    """
+
+    num_samples, num_features = X.shape
+    weights = np.zeros(num_features + 1)  # Add bias weight
+    threshold = 0
+    iterations = 0
+
+    while iterations < max_iterations:
+        converged = True
+        for i in range(num_samples):
+            output = np.dot(X[i], weights[1:]) + weights[0]  # Calculate weighted sum
+            predicted_class = 1 if output >= threshold else 0
+
+            if predicted_class != y[i]:  # Misclassification
+                weights[1:] += learning_rate * y[i] * X[i]  # Update weights
+                weights[0] += learning_rate * y[i]  # Update bias
+                threshold -= learning_rate * y[i]  # Update threshold
+                converged = False
+
+        iterations += 1
+        if converged:
+            break
+
+    return weights, threshold, iterations
+
+# Example usage
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([0, 0, 0, 1])  # AND logic function
+
+weights, threshold, iterations = perceptron(X, y)
+print("Learned weights:", weights)
+print("Learned threshold:", threshold)
+print("Iterations taken:", iterations)
+
+ ###### mccluch program ######
+
+def mcculloch_pitts(x1, x2, weights, threshold):
+    """
+    Implements a single McCulloch-Pitts neuron.
+
+    Args:
+        x1 (int): Input value 1.
+        x2 (int): Input value 2.
+        weights (tuple): Weights for each input (w1, w2).
+        threshold (int): Threshold value for activation.
+
+    Returns:
+        int: Output value (0 or 1).
+    """
+
+    weighted_sum = x1 * weights[0] + x2 * weights[1]
+    output = 1 if weighted_sum >= threshold else 0
+    return output
+
+# AND gate
+def and_gate(x1, x2):
+    weights = (1, 1)
+    threshold = 2
+    return mcculloch_pitts(x1, x2, weights, threshold)
+
+# OR gate
+def or_gate(x1, x2):
+    weights = (1, 1)
+    threshold = 1
+    return mcculloch_pitts(x1, x2, weights, threshold)
+
+# XOR gate (using two McCulloch-Pitts neurons)
+def xor_gate(x1, x2):
+    output1 = and_gate(x1, not_gate(x2))
+    output2 = and_gate(not_gate(x1), x2)
+    return or_gate(output1, output2)
+
+# ANDNOT gate
+def andnot_gate(x1, x2):
+    weights = (1, -1)  # Negative weight for x2
+    threshold = 1
+    return mcculloch_pitts(x1, x2, weights, threshold)
+
+# NOT gate (helper function for XOR)
+def not_gate(x):
+    return 0 if x == 1 else 1
+
+# Example usage
+print("AND:", and_gate(1, 1))  # Output: 1
+print("OR:", or_gate(0, 1))   # Output: 1
+print("XOR:", xor_gate(1, 0))  # Output: 1
+print("ANDNOT:", andnot_gate(1, 0))  # Output: 1
+
+####### vaccum program ######
+
+import random
+def display(room):
+    for row in room:
+        print(row)
+room=[
+    [1,1,1,1],
+    [1,1,1,1],
+    [1,1,1,1],
+    [1,1,1,1],
+]
+print("All the room are dirty")
+display(room)
+x=0
+y=0
+for row in room:
+        print(row)
+while x<4:
+    while y<4:
+        room[x][y] = random.choice([0,1])
+        y+=1
+    x+=1
+    y=0
+print("Before cleaning the room I detect all of these random dirts")
+display(room)
+x =0
+y= 0
+z=0
+while x < 4:
+    while y < 4:
+        if room[x][y] == 1:
+            print("Vaccum in this location now,",x, y)
+            room[x][y] = 0
+            print("cleaned", x, y)
+            z+=1
+        y+=1
+    x+=1
+    y=0
+pro= (100-((z/16)*100))
+print("Room is clean now, Thanks for using")
+display(room)
+print('performance=',pro,'%')
+
+
+###### tic-tac-toe program ######
+
+# Initialize the game board
+board = [[' ' for _ in range(3)] for _ in range(3)]
+
+# Function to print the board
+def print_board(board):
+    for row in board:
+        print(' | '.join(row))
+        print('---------')
+
+# Function to check if a player has won
+def check_win(board, player):
+    # Check rows
+    for row in board:
+        if row.count(player) == 3:
+            return True
+    
+    # Check columns
+    for col in range(3):
+        if [board[row][col] for row in range(3)].count(player) == 3:
+            return True
+    
+    # Check diagonals
+    if board[0][0] == board[1][1] == board[2][2] == player:
+        return True
+    if board[0][2] == board[1][1] == board[2][0] == player:
+        return True
+    
+    return False
+
+# Main game loop
+current_player = 'X'
+while True:
+    # Print the board
+    print_board(board)
+    
+    # Get player's move
+    row = int(input("Enter the row number (0-2): "))
+    col = int(input("Enter the column number (0-2): "))
+    
+    # Check if the chosen space is valid
+    if board[row][col] != ' ':
+        print("Invalid move. Try again.")
+        continue
+    
+    # Mark the space with player's mark
+    board[row][col] = current_player
+    
+    # Check if the current player has won
+    if check_win(board, current_player):
+        print_board(board)
+        print("Congratulations! Player", current_player, "wins!")
+        break
+    
+    # Check if the board is full (tie)
+    if all(board[i][j] != ' ' for i in range(3) for j in range(3)):
+        print_board(board)
+        print("It's a tie!")
+        break
+    
+    # Switch to the other player
+    current_player = 'O' if current_player == 'X' else 'X'
+
+
+###### alpha beta pruining######
+
+class Node:
+    def _init_(self, value, depth, alpha, beta):
+        self.value = value
+
+        self.depth = depth
+        self.alpha = alpha
+        self.beta = beta
+        self.children = []
+
+def alphabeta(node, maximizing_player):
+    if node.depth == 0 or not node.children:
+        return node.value
+
+    if maximizing_player:
+        alpha = node.alpha
+        for child in node.children:
+            alpha = max(alpha, alphabeta(child, False))
+            if alpha >= node.beta:
+                break  # Prune branches that won't affect the final decision
+        return alpha
+    else:
+        beta = node.beta
+        for child in node.children:
+            beta = min(beta, alphabeta(child, True))
+            if beta <= node.alpha:
+                break  # Prune branches that won't affect the final decision
+        return beta
+
+# Example usage
+root = Node(5, 3, -float('inf'), float('inf'))
+child1 = Node(3, 2, -float('inf'), float('inf'))
+child2 = Node(7, 2, -float('inf'), float('inf'))
+child3 = Node(2, 1, -float('inf'), float('inf'))
+child4 = Node(4, 1, -float('inf'), float('inf'))
+root.children.append(child1)
+root.children.append(child2)
+child1.children.append(child3)
+child1.children.append(child4)
+
+# Order nodes by heuristic value (higher is better for maximizing player)
+root.children.sort(key=lambda child: child.value, reverse=True)
+
+score = alphabeta(root, True)
+print("Minimax score:", score)
